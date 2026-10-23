@@ -223,3 +223,27 @@ def test_allowance_does_not_cover_a_new_key_for_the_same_script(tmp_path: Path) 
     files = {script: "import json\n", config_path: config}
     [offense] = checker.scan(make_repo(tmp_path, files))
     assert offense.startswith(f"{config_path}:{5}: ")
+
+
+def test_scan_caches_import_analysis_for_repeated_yaml_targets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+
+    def count_imports(path: str, repo_root: Path, tracked_py: set[str]) -> set[str]:
+        calls.append(path)
+        return set()
+
+    monkeypatch.setattr(checker, "third_party_imports", count_imports)
+    command = f'run: \'python3 "{_ROOT}/skills/foo/scripts/bar.py"\'\n'
+    repo = make_repo(
+        tmp_path,
+        {
+            **_STDLIB,
+            _CONFIG: command,
+            _OTHER: command,
+        },
+    )
+
+    assert checker.scan(repo) == []
+    assert calls == [".claude/skills/foo/scripts/bar.py"]
