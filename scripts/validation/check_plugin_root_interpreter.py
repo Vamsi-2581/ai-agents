@@ -348,7 +348,7 @@ def _dependency_message(
     tail: str,
     repo_root: Path,
     tracked_py: set[str],
-    import_cache: dict[str, frozenset[str]] | None = None,
+    import_cache: dict[str, frozenset[str]],
 ) -> str | None:
     """Return rule-2's message for one canonical-form invocation, or ``None``."""
     mapped = f"{_PLUGIN_ROOT_FALLBACK}/{tail}"
@@ -357,8 +357,6 @@ def _dependency_message(
             f"{rel}:{lineno}: {mapped} is not a tracked file "
             f"(dangling plugin-root target, issue #5949)"
         )
-    if import_cache is None:
-        import_cache = {}
     external = import_cache.get(mapped)
     if external is None:
         external = frozenset(third_party_imports(mapped, repo_root, tracked_py))
@@ -390,10 +388,8 @@ def _plugin_root_offenses(
     rel: str,
     repo_root: Path,
     tracked_py: set[str],
-    import_cache: dict[str, frozenset[str]] | None = None,
+    import_cache: dict[str, frozenset[str]],
 ) -> list[_Offense]:
-    if import_cache is None:
-        import_cache = {}
     offenses: list[_Offense] = []
     for lineno, invocation in _undeclared(text, _find_invocations):
         tail = invocation.tail
@@ -427,11 +423,9 @@ def find_offenses(
     rel: str,
     repo_root: Path,
     tracked_py: set[str],
-    import_cache: dict[str, frozenset[str]] | None = None,
+    import_cache: dict[str, frozenset[str]],
 ) -> list[tuple[int, str]]:
     """Return (line, message) for every offense in one file's already-read text."""
-    if import_cache is None:
-        import_cache = {}
     return [
         (o.lineno, o.message)
         for o in _plugin_root_offenses(text, rel, repo_root, tracked_py, import_cache)
@@ -444,11 +438,9 @@ def find_yaml_offenses(
     repo_root: Path,
     tracked_py: set[str],
     used_allowances: set[_Key],
-    import_cache: dict[str, frozenset[str]] | None = None,
+    import_cache: dict[str, frozenset[str]],
 ) -> list[tuple[int, str]]:
     """Return rule 1 to 3 offenses minus allowances; record each allowance used."""
-    if import_cache is None:
-        import_cache = {}
     found = _plugin_root_offenses(text, rel, repo_root, tracked_py, import_cache)
     found += _bare_path_offenses(text, rel)
     root_relative = next((rel[len(r) :] for r in _PLUGIN_ROOTS if rel.startswith(r)), rel)

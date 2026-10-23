@@ -298,7 +298,7 @@ def test_line_continuation_split_invocation_is_reported_at_its_start_line(
         '/skills/foo/scripts/missing.py"\n'
     )
 
-    offenses = find_offenses(text, "NOTES.md", repo, set())
+    offenses = find_offenses(text, "NOTES.md", repo, set(), {})
 
     assert len(offenses) == 1
     lineno, message = offenses[0]
